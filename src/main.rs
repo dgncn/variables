@@ -214,7 +214,7 @@ fn main() {
 
     
     //===========================
-    
+
     ////Ownership
     
     // let s1: String = String::from("Merhaba, Rust!"); // s1, bu değerin sahibi
@@ -230,23 +230,14 @@ fn main() {
 
 
 
-
-
-
-
-
-
-
-
-
-
     //===========================
 
     ////Borrowing
     
     // let mut x = String::from("hello");
     // println!("{}", x);
-    // let _y = &x; //x in referansı değişkene atandı.
+    // let _y = &x; //x in referansı değişkene atandı. x'in referansi _y ye ödünç verildi 
+    // xte yapılacak alttaki gibi bir değişiklik yeni bir allocation yapacağından dolayı _y değişkeni eski referansta kalacağından hata oluşur
     // x = String::from("hello1"); //cannot assign to `x` because it is borrowed
     // println!("{}", x);
     // println!("{}", _y); //_y x in eski referansına baktığı için kod hata verir.
@@ -258,6 +249,80 @@ fn main() {
     // // error: cannot assign to `test_number` because it is borrowed
     // println!("Num: {}, Ref: {}", test_number.number, test_ref.number);
 
+
+    ////mutable borrowing 1
+    // let mut x = 5;
+    // let y = &mut x; // y, x değerini değiştirilebilir bir şekilde ödünç alıyor
+    // *y += 1; // y pointerinın gösterdiği heap bellekteki değer => x değerini artırabiliriz
+    // println!("x: {}", x);
+
+    
+    ////mutable borrowing 2
+    // let mut xy = 15;
+    
+    // set_new_xy_value(&mut xy); // metoda xy değişkeni değişebilir şekilde ödünç verildi ve değiştirildi. 
+    // //ancak xy'nin ownership'i fonksiyona transfer edilmedi.
+    
+    // println!("xy: {}", xy);
+
+    ////immutable borrowing
+    ////senaryo immutable olduğundan değişiklik yapılamaz. 
+
+    // let imm = Person {name: "John Connor".to_string(), age : 10};
+    // print_person_informations(&imm); //immutable borrowing
+
+    ////mutable borrowing 3
+    // let mut john = Person {
+    //     name: String::from("John Connor"),
+    //     age: 25,
+    // };
+
+    // println!("Önce: {} - {}", john.name, john.age);
+
+    // change_age(&mut john, 10); //mutable borrowing
+
+    // println!("Sonra: {} - {}", john.name, john.age);
+
+
+    ////borrowing 4
+    // let mut taxi_driver = Person { name: String::from("Travis Bickle"), age: 26};
+    // println!("outer1:{}", taxi_driver.name);
+
+    // {
+    //     let new_driver = &mut taxi_driver; 
+    //     *new_driver = Person { name: String::from("Travis Bickle_"), age: 25};
+    //     println!("inner new: {}", new_driver.name);
+    //     println!("inner old: {}", taxi_driver.name);
+    // }
+    // println!("outer:{}", taxi_driver.name);
+
+
+
+
+    ////Lifetimes
+    ////lifetimes yapısı sadece referenced by value larda kullanılabilir
+    ////1
+    // let x: i32 = 42;
+    // let r: &i32; // r adında bir i32 referansı tanımladık
+
+    // {
+    //     let y: i32 = 24;
+    //     r = &y; // r, y'nin ömrü boyunca geçerli //`y` dropped here while still borrowed
+    //     println!("r: {}", r);
+    // } // y'nin ömrü burada sona erer //`y` dropped here while still borrowed
+    // println!("r: {}", r); //throws
+
+    ////2
+    let x: i32 = 42;
+    let y: i32 = 24;
+
+    let max_value: &i32;
+    {
+        let x_ref: &i32 = &x;
+        max_value = get_max(x_ref, &y); // x_ref ve y, farklı lifetime'lara sahip
+    } // x_ref'nin ömrü burada sona erer
+    println!("En büyük sayı: {}", max_value);
+
 }
 
 // fn type_of<T>(_: &T) {
@@ -265,6 +330,18 @@ fn main() {
 //     println!("===================");
 // }
 
+// struct Person {
+//     name: String,
+//     age : u8
+// }
+
+// fn print_person_informations(person : &Person) {
+//     println!("Name: {}, Age: {}", person.name, person.age);
+// }
+
+// fn change_age(person: &mut Person, new_age: u8) {
+//     person.age = new_age;
+// }
 
 // struct TestNum {
 //     number: u8,
@@ -298,3 +375,15 @@ fn main() {
 //         }
 //     }
 // }
+
+// fn set_new_xy_value(num_ref : &mut u8) {
+//     *num_ref = *num_ref + 1;
+// }
+
+fn get_max<'a>(x: &'a i32, y: &'a i32) -> &'a i32 {
+    if x > y {
+        x
+    } else {
+        y
+    }
+}
